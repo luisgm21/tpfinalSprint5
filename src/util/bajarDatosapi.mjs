@@ -38,42 +38,15 @@ const transformCountryData = (data) => {
         return null;
     }
     return {
-        name: {
-            common: data.name.common,
-            official: data.name.official,
-            nativeName: transformNativeName(data.name.nativeName)
-        },
-        independent: data.independent || false,
-        status: data.status || '',
-        unMember: data.unMember || false,
-        currencies: transformCurrencies(data.currencies),
+        name: data.name.nativeName.official,
         capital: data.capital || [],
-        region: data.region || '',
-        subregion: data.subregion || '',
         languages: transformLanguages(data.languages),
-        latlng: data.latlng || [],
-        landlocked: data.landlocked || false,
         borders: data.borders || [],
         area: data.area || 0,
-        flag: data.flag || '',
-        maps: {
-            googleMaps: data.maps?.googleMaps || '',
-            openStreetMaps: data.maps?.openStreetMaps || ''
-        },
         population: data.population || 0,
         gini: new Map(Object.entries(data.gini || {})),
-        fifa: data.fifa || '',
+        abr: data.cca3 || '',
         timezones: data.timezones || [],
-        continents: data.continents || [],
-        flags: {
-            png: data.flags?.png || '',
-            svg: data.flags?.svg || '',
-            alt: data.flags?.alt || ''
-        },
-        startOfWeek: data.startOfWeek || '',
-        capitalInfo: {
-            latlng: data.capitalInfo?.latlng || []
-        },
     };
 };
 
@@ -81,7 +54,7 @@ async function obtenerYGuardarPaises() {
     try {
         await connectDB();
         
-        const response = await fetch('https://restcountries.com/v3.1/all');
+        const response = await fetch('https://restcountries.com/v3.1/region/america');
         if (!response.ok) {
             throw new Error('Error en la solicitud: ' + response.status);
         }
