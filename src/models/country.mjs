@@ -22,6 +22,6 @@ const countrySchema = new mongoose.Schema({
     timestamps: true 
 });
 
-const Country = mongoose.model('Country', countrySchema,'Grupo-11');
+const Country = mongoose.model('Country', countrySchema,'Grupo-19');
 
 export default Country;

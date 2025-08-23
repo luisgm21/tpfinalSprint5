@@ -2,35 +2,9 @@ import mongoose from 'mongoose';
 import { connectDB } from '../config/dbConfig.mjs';
 import Country from '../models/country.mjs';
 
-const transformCurrencies = (currenciesData) => {
-    if (!currenciesData) return new Map();
-    
-    const currenciesMap = new Map();
-    for (const [code, details] of Object.entries(currenciesData)) {
-        currenciesMap.set(code, {
-            name: details.name || '',
-            symbol: details.symbol || ''
-        });
-    }
-    return currenciesMap;
-};
-
 const transformLanguages = (languagesData) => {
     if (!languagesData) return new Map();
     return new Map(Object.entries(languagesData));
-};
-
-const transformNativeName = (nativeNameData) => {
-    if (!nativeNameData) return new Map();
-    const nativeNameMap = new Map();
-    
-    for (const [code, names] of Object.entries(nativeNameData)) {
-        nativeNameMap.set(code, {
-            official: names.official || '',
-            common: names.common || ''
-        });
-    }
-    return nativeNameMap;
 };
 
 const transformCountryData = (data) => {
