@@ -115,3 +115,5 @@ class CountryRepository extends IRepository {
     }
 
 }
+
+export default new CountryRepository();

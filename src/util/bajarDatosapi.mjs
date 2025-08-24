@@ -12,7 +12,7 @@ const transformCountryData = (data) => {
         return null;
     }
     return {
-        name: data.name.nativeName.official,
+        name: data.name.nativeName.spa.official,
         capital: data.capital || [],
         languages: transformLanguages(data.languages),
         borders: data.borders || [],

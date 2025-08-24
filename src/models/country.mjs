@@ -1,8 +1,17 @@
 import mongoose from 'mongoose';
 
 const countrySchema = new mongoose.Schema({
-    name: String, // Almacena data.name.nativeName.official
-    capital: [String],
+    name: { type: String, required: true }, // Almacena data.name.nativeName.official
+    capital: { 
+        type: [String], 
+        required: true,
+        validate: {
+            validator: function(v) {
+                return v.length >= 1;
+            },
+            message: 'El pais debe tener por lo menos una capital'
+        }
+    },
     languages: {
         type: Map,
         of: String
