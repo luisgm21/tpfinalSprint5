@@ -1,36 +1,65 @@
 <div class="container mt-4">
+  <% if (typeof errors === 'undefined') { var errors = []; } %>
   <h1><%= country ? 'Editar país' : 'Agregar país' %></h1>
+
+  <% if (Array.isArray(errors) && errors.length) { %>
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        <% errors.forEach(err => { %>
+          <li><strong><%= err.field %>:</strong> <%= err.message %></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
 
   <form id="countryForm" method="post" action="<%= country ? ('/countries/' + country._id) : '/countries' %>">
     <div class="mb-3">
       <label for="name" class="form-label">Nombre (oficial)</label>
-      <input type="text" id="name" name="name" class="form-control" required value="<%= country ? country.name : '' %>">
+  <input type="text" id="name" name="name" class="form-control <%= errors.find(e=>e.field==='name') ? 'is-invalid' : '' %>" value="<%= country ? country.name : '' %>">
+      <% if (errors.find(e=>e.field==='name')) { %>
+        <div class="invalid-feedback"><%= errors.find(e=>e.field==='name').message %></div>
+      <% } %>
     </div>
 
     <div class="mb-3">
       <label for="capital" class="form-label">Capital(es) (separadas por coma)</label>
-      <input type="text" id="capital" name="capital" class="form-control" placeholder="Buenos Aires, La Plata" value="<%= country && country.capital ? country.capital.join(', ') : '' %>">
+  <input type="text" id="capital" name="capital" class="form-control <%= errors.find(e=>e.field==='capital') ? 'is-invalid' : '' %>" placeholder="Buenos Aires, La Plata" value="<%= country && country.capital ? country.capital.join(', ') : '' %>">
+      <% if (errors.find(e=>e.field==='capital')) { %>
+        <div class="invalid-feedback"><%= errors.find(e=>e.field==='capital').message %></div>
+      <% } %>
     </div>
 
     <div class="mb-3">
       <label for="languages" class="form-label">Languages (formato: code:name por línea)</label>
-  <textarea id="languages" name="languages" class="form-control" rows="3" placeholder="spa:Spanish\neng:English"><%= country && country.languages ? Array.from(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+  <textarea id="languages" name="languages" class="form-control <%= errors.find(e=>e.field==='languages') ? 'is-invalid' : '' %>" rows="3" placeholder="spa:Spanish\neng:English"><%= country && country.languages ? Array.from(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+      <% if (errors.find(e=>e.field==='languages')) { %>
+        <div class="invalid-feedback d-block"><%= errors.find(e=>e.field==='languages').message %></div>
+      <% } %>
       <div class="form-text">Ejemplo: <code>spa:Spanish</code> en cada línea</div>
     </div>
 
     <div class="mb-3">
       <label for="borders" class="form-label">Fronteras (códigos, separadas por coma)</label>
-      <input type="text" id="borders" name="borders" class="form-control" placeholder="BRA, CHL, URY" value="<%= country && country.borders ? country.borders.join(', ') : '' %>">
+  <input type="text" id="borders" name="borders" class="form-control <%= errors.find(e=>e.field==='borders') ? 'is-invalid' : '' %>" placeholder="BRA, CHL, URY" value="<%= country && country.borders ? country.borders.join(', ') : '' %>">
+      <% if (errors.find(e=>e.field==='borders')) { %>
+        <div class="invalid-feedback"><%= errors.find(e=>e.field==='borders').message %></div>
+      <% } %>
     </div>
 
     <div class="row">
       <div class="col-md-4 mb-3">
         <label for="area" class="form-label">Área (km²)</label>
-        <input type="number" id="area" name="area" class="form-control" step="any" value="<%= country && country.area ? country.area : '' %>">
+  <input type="number" id="area" name="area" class="form-control <%= errors.find(e=>e.field==='area') ? 'is-invalid' : '' %>" step="any" value="<%= country && country.area ? country.area : '' %>">
+      <% if (errors.find(e=>e.field==='area')) { %>
+        <div class="invalid-feedback"><%= errors.find(e=>e.field==='area').message %></div>
+      <% } %>
       </div>
       <div class="col-md-4 mb-3">
         <label for="population" class="form-label">Población</label>
-        <input type="number" id="population" name="population" class="form-control" value="<%= country && country.population ? country.population : '' %>">
+  <input type="number" id="population" name="population" class="form-control <%= errors.find(e=>e.field==='population') ? 'is-invalid' : '' %>" value="<%= country && country.population ? country.population : '' %>">
+      <% if (errors.find(e=>e.field==='population')) { %>
+        <div class="invalid-feedback"><%= errors.find(e=>e.field==='population').message %></div>
+      <% } %>
       </div>
       <div class="col-md-4 mb-3">
         <label for="abr" class="form-label">Código (cca3)</label>
@@ -40,12 +69,18 @@
 
     <div class="mb-3">
       <label for="timezones" class="form-label">Timezones (separadas por coma)</label>
-      <input type="text" id="timezones" name="timezones" class="form-control" placeholder="UTC-03:00" value="<%= country && country.timezones ? country.timezones.join(', ') : '' %>">
+  <input type="text" id="timezones" name="timezones" class="form-control <%= errors.find(e=>e.field==='timezones') ? 'is-invalid' : '' %>" placeholder="UTC-03:00" value="<%= country && country.timezones ? country.timezones.join(', ') : '' %>">
+      <% if (errors.find(e=>e.field==='timezones')) { %>
+        <div class="invalid-feedback"><%= errors.find(e=>e.field==='timezones').message %></div>
+      <% } %>
     </div>
 
     <div class="mb-3">
       <label for="gini" class="form-label">Gini (formato: year:value por línea)</label>
-  <textarea id="gini" name="gini" class="form-control" rows="2" placeholder="2019:42.5\n2020:43.1"><%= country && country.gini ? Array.from(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+  <textarea id="gini" name="gini" class="form-control <%= errors.find(e=>e.field==='gini') ? 'is-invalid' : '' %>" rows="2" placeholder="2019:42.5\n2020:43.1"><%= country && country.gini ? Array.from(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+      <% if (errors.find(e=>e.field==='gini')) { %>
+        <div class="invalid-feedback d-block"><%= errors.find(e=>e.field==='gini').message %></div>
+      <% } %>
       <div class="form-text">Ejemplo: <code>2019:42.5</code> por línea</div>
     </div>
 
@@ -56,74 +91,5 @@
   </form>
 </div>
 
-<script>
-  // Antes de enviar el formulario, convertimos las textareas a inputs ocultos con JSON
-  document.getElementById('countryForm').addEventListener('submit', function(e) {
-    const form = e.target;
-
-    // Construir objetos para languages y gini (igual que antes)
-    const langLines = form.languages.value.split('\n').map(l=>l.trim()).filter(Boolean);
-    const languages = {};
-    for (const line of langLines) {
-      const idx = line.indexOf(':');
-      if (idx === -1) {
-        alert('Formato inválido en languages. Use code:name por línea. Línea: ' + line);
-        e.preventDefault();
-        return;
-      }
-      const code = line.slice(0, idx).trim();
-      const name = line.slice(idx + 1).trim();
-      if (!code || !name) {
-        alert('Formato inválido en languages. Use code:name por línea. Línea: ' + line);
-        e.preventDefault();
-        return;
-      }
-      languages[code] = name;
-    }
-
-    const giniLines = form.gini.value.split('\n').map(l=>l.trim()).filter(Boolean);
-    const gini = {};
-    for (const line of giniLines) {
-      const idx = line.indexOf(':');
-      if (idx === -1) {
-        alert('Formato inválido en gini. Use year:value por línea. Línea: ' + line);
-        e.preventDefault();
-        return;
-      }
-      const year = line.slice(0, idx).trim();
-      const value = line.slice(idx + 1).trim();
-      if (!year || !value || isNaN(Number(value))) {
-        alert('Formato inválido en gini. Use year:value por línea con un número en value. Línea: ' + line);
-        e.preventDefault();
-        return;
-      }
-      gini[year] = Number(value);
-    }
-
-    // Añadir inputs ocultos con JSON para que el servidor los reciba como strings si el browser envía form-urlencoded
-    let hidden = document.getElementById('hidden_json_payload');
-    if (!hidden) {
-      hidden = document.createElement('input');
-      hidden.type = 'hidden';
-      hidden.name = '__json_payload';
-      hidden.id = 'hidden_json_payload';
-      form.appendChild(hidden);
-    }
-
-    // Construimos el objeto definitivo
-    const payload = {
-      name: form.name.value.trim(),
-      capital: form.capital.value ? form.capital.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
-      languages,
-      borders: form.borders.value ? form.borders.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
-      area: form.area.value ? Number(form.area.value) : 0,
-      population: form.population.value ? Number(form.population.value) : 0,
-      gini,
-      abr: form.abr.value ? form.abr.value.toUpperCase() : '',
-      timezones: form.timezones.value ? form.timezones.value.split(',').map(s=>s.trim()).filter(Boolean) : []
-    };
-
-    hidden.value = JSON.stringify(payload);
-    // El servidor ahora parseará __json_payload si existe y hará redirect a /countries
-  });
-</script>
+<!-- Validación removida del front: toda la lógica de parse/validación de languages y gini quedó en el backend -->
+  <!-- Interactividad y validación cliente removidas; toda la validación ocurre en el backend -->

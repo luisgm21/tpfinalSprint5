@@ -53,4 +53,10 @@ async function obtenerYGuardarPaises() {
     }
 }
 
-obtenerYGuardarPaises();
+// No ejecutar automáticamente al importar: sólo cuando se invoque explícitamente.
+if (process.argv.includes('--import-data')) {
+    obtenerYGuardarPaises().catch(err => {
+        console.error('Import data failed:', err);
+        process.exit(1);
+    });
+}

@@ -89,7 +89,7 @@ export const mostrarPaises = async (req, res) => {
 // Renderiza formulario para crear un nuevo país
 export const mostrarFormularioNuevo = (req, res) => {
     try {
-        res.render('formCountry', { country: null, navbarLinks: links, title: 'Agregar país' });
+    res.render('formCountry', { country: null, navbarLinks: links, title: 'Agregar país', errors: [] });
     } catch (error) {
         res.status(500).send('Error al mostrar el formulario');
     }
@@ -164,7 +164,7 @@ export const mostrarFormularioEditar = async (req, res) => {
             return obj;
         })(countryDoc);
 
-        res.render('formCountry', { country, navbarLinks: links, title: 'Editar país' });
+    res.render('formCountry', { country, navbarLinks: links, title: 'Editar país', errors: [] });
     } catch (error) {
         res.status(404).send({ message: error.message });
     }
