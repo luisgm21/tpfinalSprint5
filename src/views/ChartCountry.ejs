@@ -18,8 +18,10 @@
                     <th>Nombre</th>
                     <th>Capital</th>
                     <th>Población</th>
+                    <th>Gini</th>
                     <th>Área</th>
                     <th>Código</th>
+                    <th>Fronteras</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -30,21 +32,46 @@
                             <td><%= country.name %></td>
                             <td><%= country.capital.join(', ') %></td>
                             <td><%= country.population?.toLocaleString() || 'N/A' %></td>
+                            <td>
+                                <% 
+                                    let latestGini = null;
+                                    let historyText = '';
+                                    try {
+                                        if (country.gini && Object.keys(country.gini).length) {
+                                            const years = Object.keys(country.gini).sort();
+                                            const y = years[years.length - 1];
+                                            latestGini = Number(country.gini[y]);
+                                            // construir historial legible
+                                            historyText = years.map(yr => `${yr}: ${country.gini[yr]}`).join('\n');
+                                        }
+                                    } catch(e) { latestGini = null; historyText = ''; }
+                                    const formattedGini = latestGini !== null && !Number.isNaN(latestGini) ? latestGini.toFixed(1) : '-';
+                                %>
+                                <span title="<%= historyText.replace(/\"/g, '&#34;') %>"><%= formattedGini %></span>
+                            </td>
                             <td><%= country.area?.toLocaleString() || 'N/A' %> km²</td>
                             <td><%= country.abr %></td>
                             <td>
-                                <button class="btn btn-sm btn-primary" onclick="editCountry('<%= country._id %>')">
-                                    Editar
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteCountry('<%= country._id %>')">
-                                    Eliminar
-                                </button>
+                                <% if (country.borders && country.borders.length > 0) { %>
+                                    <% const borderNames = country.borders.map(code => codeToName[code] || code); %>
+                                    <%= borderNames.join(', ') %>
+                                <% } else { %>
+                                    -
+                                <% } %>
+                            </td>
+                            <td class="text-center">
+                                <a href="/countries/edit/<%= country._id %>" title="Editar" class="action-icon me-2">
+                                    <i class="fa fa-pen"></i>
+                                </a>
+                                <a href="javascript:void(0)" title="Eliminar" class="action-icon delete" onclick="deleteCountry('<%= country._id %>')">
+                                    <i class="fa fa-trash"></i>
+                                </a>
                             </td>
                         </tr>
                     <% }); %>
                 <% } else { %>
                     <tr>
-                        <td colspan="6" class="text-center">No hay países disponibles</td>
+                        <td colspan="8" class="text-center">No hay países disponibles</td>
                     </tr>
                 <% } %>
             </tbody>
@@ -61,7 +88,7 @@
                 responsive: true,
                 order: [[0, 'asc']], // Ordenar por nombre
                 columnDefs: [
-                    { targets: [5], orderable: false } // La columna de acciones no se puede ordenar
+                    { targets: [7], orderable: false } // La columna de acciones no se puede ordenar
                 ]
             });
         });
@@ -74,7 +101,7 @@
 
         function deleteCountry(id) {
             if (confirm('¿Estás seguro de que quieres eliminar este país?')) {
-                fetch(`/api/countries/${id}`, {
+                fetch(`/countries/${id}`, {
                     method: 'DELETE'
                 })
                 .then(response => response.json())

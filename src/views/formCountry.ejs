@@ -1,0 +1,137 @@
+<div class="container mt-4">
+  <h1><%= country ? 'Editar país' : 'Agregar país' %></h1>
+
+  <form id="countryForm" method="post" action="<%= country ? ('/countries/' + country._id) : '/countries' %>">
+    <div class="mb-3">
+      <label for="name" class="form-label">Nombre (oficial)</label>
+      <input type="text" id="name" name="name" class="form-control" required value="<%= country ? country.name : '' %>">
+    </div>
+
+    <div class="mb-3">
+      <label for="capital" class="form-label">Capital(es) (separadas por coma)</label>
+      <input type="text" id="capital" name="capital" class="form-control" placeholder="Buenos Aires, La Plata" value="<%= country && country.capital ? country.capital.join(', ') : '' %>">
+    </div>
+
+    <div class="mb-3">
+      <label for="languages" class="form-label">Languages (formato: code:name por línea)</label>
+  <textarea id="languages" name="languages" class="form-control" rows="3" placeholder="spa:Spanish\neng:English"><%= country && country.languages ? Array.from(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+      <div class="form-text">Ejemplo: <code>spa:Spanish</code> en cada línea</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="borders" class="form-label">Fronteras (códigos, separadas por coma)</label>
+      <input type="text" id="borders" name="borders" class="form-control" placeholder="BRA, CHL, URY" value="<%= country && country.borders ? country.borders.join(', ') : '' %>">
+    </div>
+
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label for="area" class="form-label">Área (km²)</label>
+        <input type="number" id="area" name="area" class="form-control" step="any" value="<%= country && country.area ? country.area : '' %>">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label for="population" class="form-label">Población</label>
+        <input type="number" id="population" name="population" class="form-control" value="<%= country && country.population ? country.population : '' %>">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label for="abr" class="form-label">Código (cca3)</label>
+        <input type="text" id="abr" name="abr" class="form-control" maxlength="3" value="<%= country && country.abr ? country.abr : '' %>">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="timezones" class="form-label">Timezones (separadas por coma)</label>
+      <input type="text" id="timezones" name="timezones" class="form-control" placeholder="UTC-03:00" value="<%= country && country.timezones ? country.timezones.join(', ') : '' %>">
+    </div>
+
+    <div class="mb-3">
+      <label for="gini" class="form-label">Gini (formato: year:value por línea)</label>
+  <textarea id="gini" name="gini" class="form-control" rows="2" placeholder="2019:42.5\n2020:43.1"><%= country && country.gini ? Array.from(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+      <div class="form-text">Ejemplo: <code>2019:42.5</code> por línea</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="/countries" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // countryId se usa para determinar si es edición
+  const countryId = <%= JSON.stringify(country ? String(country._id) : null) %>;
+
+  document.getElementById('countryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const data = {
+      name: form.name.value.trim(),
+      capital: form.capital.value ? form.capital.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
+      languages: {},
+      borders: form.borders.value ? form.borders.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
+      area: form.area.value ? Number(form.area.value) : 0,
+      population: form.population.value ? Number(form.population.value) : 0,
+      gini: {},
+      abr: form.abr.value ? form.abr.value.toUpperCase() : '',
+      timezones: form.timezones.value ? form.timezones.value.split(',').map(s=>s.trim()).filter(Boolean) : []
+    };
+
+    // Procesar languages textarea (code:name por línea)
+    const langLines = form.languages.value.split('\n').map(l=>l.trim()).filter(Boolean);
+    for (const line of langLines) {
+      const idx = line.indexOf(':');
+      if (idx === -1) {
+        alert('Formato inválido en languages. Use code:name por línea. Línea: ' + line);
+        return;
+      }
+      const code = line.slice(0, idx).trim();
+      const name = line.slice(idx + 1).trim();
+      if (!code || !name) {
+        alert('Formato inválido en languages. Use code:name por línea. Línea: ' + line);
+        return;
+      }
+      data.languages[code] = name;
+    }
+
+    // Procesar gini textarea (year:value por línea)
+    const giniLines = form.gini.value.split('\n').map(l=>l.trim()).filter(Boolean);
+    for (const line of giniLines) {
+      const idx = line.indexOf(':');
+      if (idx === -1) {
+        alert('Formato inválido en gini. Use year:value por línea. Línea: ' + line);
+        return;
+      }
+      const year = line.slice(0, idx).trim();
+      const value = line.slice(idx + 1).trim();
+      if (!year || !value || isNaN(Number(value))) {
+        alert('Formato inválido en gini. Use year:value por línea con un número en value. Línea: ' + line);
+        return;
+      }
+      data.gini[year] = Number(value);
+    }
+
+  // Determinar endpoint y método (usaremos POST para crear/editar según rutas configuradas)
+  const url = countryId ? `/countries/${countryId}` : '/countries';
+  const method = 'POST';
+
+    try {
+      const resp = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(()=>({ message: 'Error desconocido' }));
+        alert('Error: ' + (err.message || JSON.stringify(err)));
+        return;
+      }
+
+      // Redirigir a la lista de países
+      window.location.href = '/countries';
+    } catch (error) {
+      console.error(error);
+      alert('Error al guardar el país');
+    }
+  });
+</script>

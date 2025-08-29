@@ -134,3 +134,15 @@ footer {
         .page-header .page-title { font-size: 1.25rem; }
         #addCountryBtn { justify-content: center; }
     }
+
+    /* Iconos de acción en la tabla */
+    .action-icon {
+        color: #0f172a;
+        font-size: 1.05rem;
+        padding: 6px;
+        border-radius: 4px;
+        transition: background .12s ease, color .12s ease;
+    }
+    .action-icon:hover { background: rgba(15,23,42,0.06); color: #0b74ff; text-decoration: none; }
+    .action-icon.delete { color: #b91c1c; }
+    .action-icon.delete:hover { background: rgba(185,28,28,0.08); color: #ff4d4d; }
