@@ -174,7 +174,15 @@ export const mostrarFormularioEditar = async (req, res) => {
 export const crearPais = async (req, res) => {
     try {
         // Aceptar tanto objeto como string en languages/gini (p.ej. cuando el formulario envía application/x-www-form-urlencoded)
-        const payload = req.body || {};
+        // Si el formulario envía __json_payload (input hidden con JSON), parsearlo y usarlo
+        let payload = req.body || {};
+        if (payload.__json_payload && typeof payload.__json_payload === 'string') {
+            try {
+                payload = JSON.parse(payload.__json_payload);
+            } catch (e) {
+                // ignorar parse error y seguir con req.body
+            }
+        }
 
         const parseLanguages = (val) => {
             if (!val) return {};
@@ -216,6 +224,12 @@ export const crearPais = async (req, res) => {
         payload.gini = parseGini(payload.gini);
 
         const nuevo = await serviceAgregar(payload);
+        // Si el cliente espera HTML (envío desde formulario), redirigir a la lista
+        const accept = req.headers?.accept || '';
+        const xrw = req.headers['x-requested-with'] || '';
+        if (accept.includes('text/html') || !xrw || xrw.toLowerCase() !== 'xmlhttprequest') {
+            return res.redirect('/countries');
+        }
         return res.status(201).json({ ok: true, data: nuevo, message: 'País creado correctamente' });
     } catch (error) {
         console.error('crearPais error:', error);
@@ -227,7 +241,14 @@ export const crearPais = async (req, res) => {
 export const editarPais = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = req.body || {};
+        let body = req.body || {};
+        if (body.__json_payload && typeof body.__json_payload === 'string') {
+            try {
+                body = JSON.parse(body.__json_payload);
+            } catch (e) {
+                // ignore
+            }
+        }
 
         const parseLanguages = (val) => {
             if (!val) return {};
@@ -269,6 +290,12 @@ export const editarPais = async (req, res) => {
         body.gini = parseGini(body.gini);
 
         const actualizado = await serviceEditar(id, body);
+        // Si el cliente espera HTML (envío desde formulario), redirigir a la lista
+        const accept = req.headers?.accept || '';
+        const xrw = req.headers['x-requested-with'] || '';
+        if (accept.includes('text/html') || !xrw || xrw.toLowerCase() !== 'xmlhttprequest') {
+            return res.redirect('/countries');
+        }
         return res.json({ ok: true, data: actualizado, message: 'País actualizado correctamente' });
     } catch (error) {
         console.error('editarPais error:', error);

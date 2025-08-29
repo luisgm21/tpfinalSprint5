@@ -57,81 +57,73 @@
 </div>
 
 <script>
-  // countryId se usa para determinar si es edición
-  const countryId = <%= JSON.stringify(country ? String(country._id) : null) %>;
-
-  document.getElementById('countryForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
+  // Antes de enviar el formulario, convertimos las textareas a inputs ocultos con JSON
+  document.getElementById('countryForm').addEventListener('submit', function(e) {
     const form = e.target;
-    const data = {
-      name: form.name.value.trim(),
-      capital: form.capital.value ? form.capital.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
-      languages: {},
-      borders: form.borders.value ? form.borders.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
-      area: form.area.value ? Number(form.area.value) : 0,
-      population: form.population.value ? Number(form.population.value) : 0,
-      gini: {},
-      abr: form.abr.value ? form.abr.value.toUpperCase() : '',
-      timezones: form.timezones.value ? form.timezones.value.split(',').map(s=>s.trim()).filter(Boolean) : []
-    };
 
-    // Procesar languages textarea (code:name por línea)
+    // Construir objetos para languages y gini (igual que antes)
     const langLines = form.languages.value.split('\n').map(l=>l.trim()).filter(Boolean);
+    const languages = {};
     for (const line of langLines) {
       const idx = line.indexOf(':');
       if (idx === -1) {
         alert('Formato inválido en languages. Use code:name por línea. Línea: ' + line);
+        e.preventDefault();
         return;
       }
       const code = line.slice(0, idx).trim();
       const name = line.slice(idx + 1).trim();
       if (!code || !name) {
         alert('Formato inválido en languages. Use code:name por línea. Línea: ' + line);
+        e.preventDefault();
         return;
       }
-      data.languages[code] = name;
+      languages[code] = name;
     }
 
-    // Procesar gini textarea (year:value por línea)
     const giniLines = form.gini.value.split('\n').map(l=>l.trim()).filter(Boolean);
+    const gini = {};
     for (const line of giniLines) {
       const idx = line.indexOf(':');
       if (idx === -1) {
         alert('Formato inválido en gini. Use year:value por línea. Línea: ' + line);
+        e.preventDefault();
         return;
       }
       const year = line.slice(0, idx).trim();
       const value = line.slice(idx + 1).trim();
       if (!year || !value || isNaN(Number(value))) {
         alert('Formato inválido en gini. Use year:value por línea con un número en value. Línea: ' + line);
+        e.preventDefault();
         return;
       }
-      data.gini[year] = Number(value);
+      gini[year] = Number(value);
     }
 
-  // Determinar endpoint y método (usaremos POST para crear/editar según rutas configuradas)
-  const url = countryId ? `/countries/${countryId}` : '/countries';
-  const method = 'POST';
-
-    try {
-      const resp = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(()=>({ message: 'Error desconocido' }));
-        alert('Error: ' + (err.message || JSON.stringify(err)));
-        return;
-      }
-
-      // Redirigir a la lista de países
-      window.location.href = '/countries';
-    } catch (error) {
-      console.error(error);
-      alert('Error al guardar el país');
+    // Añadir inputs ocultos con JSON para que el servidor los reciba como strings si el browser envía form-urlencoded
+    let hidden = document.getElementById('hidden_json_payload');
+    if (!hidden) {
+      hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = '__json_payload';
+      hidden.id = 'hidden_json_payload';
+      form.appendChild(hidden);
     }
+
+    // Construimos el objeto definitivo
+    const payload = {
+      name: form.name.value.trim(),
+      capital: form.capital.value ? form.capital.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
+      languages,
+      borders: form.borders.value ? form.borders.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
+      area: form.area.value ? Number(form.area.value) : 0,
+      population: form.population.value ? Number(form.population.value) : 0,
+      gini,
+      abr: form.abr.value ? form.abr.value.toUpperCase() : '',
+      timezones: form.timezones.value ? form.timezones.value.split(',').map(s=>s.trim()).filter(Boolean) : []
+    };
+
+    hidden.value = JSON.stringify(payload);
+    // El servidor ahora parseará __json_payload si existe y hará redirect a /countries
   });
 </script>
