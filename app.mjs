@@ -2,6 +2,8 @@ import express from 'express';
 import { connectDB } from './src/config/dbConfig.mjs';
 import path from 'path';
 import expressLayouts from 'express-ejs-layouts';
+import routerCountries from './src/routes/countryRoutes.mjs';
+import links from './src/config/navBarCountryLinks.mjs';
 
 
 
@@ -21,6 +23,15 @@ app.set('layout','layout');
 app.use(express.static(path.resolve('./src/public')));
 
 connectDB();
+
+app.get('/', (req, res) => {
+  res.render('index',{
+    title: 'Pagina Principal',
+    navbarLinks: links
+  });
+});
+
+app.use('/countries', routerCountries);
 
 app.use((req, res) => {
     res.status(404).send({message: 'Ruta no encontrada'});

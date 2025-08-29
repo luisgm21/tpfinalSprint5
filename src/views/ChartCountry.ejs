@@ -1,0 +1,94 @@
+        <div class="container mt-4">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Lista de Países</h1>
+                <div class="page-subtitle">Resumen de países cargados en la base de datos</div>
+            </div>
+            <div>
+                <a id="addCountryBtn" href="/countries/new" class="btn btn-success">
+                    <i class="fa fa-plus"></i>
+                    Agregar país
+                </a>
+            </div>
+        </div>
+        
+        <table id="countriesTable" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Capital</th>
+                    <th>Población</th>
+                    <th>Área</th>
+                    <th>Código</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (countries && countries.length > 0) { %>
+                    <% countries.forEach(country => { %>
+                        <tr>
+                            <td><%= country.name %></td>
+                            <td><%= country.capital.join(', ') %></td>
+                            <td><%= country.population?.toLocaleString() || 'N/A' %></td>
+                            <td><%= country.area?.toLocaleString() || 'N/A' %> km²</td>
+                            <td><%= country.abr %></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editCountry('<%= country._id %>')">
+                                    Editar
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteCountry('<%= country._id %>')">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="6" class="text-center">No hay países disponibles</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            $('#countriesTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                },
+                pageLength: 10,
+                responsive: true,
+                order: [[0, 'asc']], // Ordenar por nombre
+                columnDefs: [
+                    { targets: [5], orderable: false } // La columna de acciones no se puede ordenar
+                ]
+            });
+        });
+
+        // Funciones para las acciones
+        function editCountry(id) {
+            // Redirigir a página de edición o abrir modal
+            window.location.href = `/countries/edit/${id}`;
+        }
+
+        function deleteCountry(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este país?')) {
+                fetch(`/api/countries/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error al eliminar el país');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar el país');
+                });
+            }
+        }
+    </script>
