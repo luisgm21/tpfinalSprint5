@@ -1,6 +1,7 @@
 <div class="container mt-4">
   <% if (typeof errors === 'undefined') { var errors = []; } %>
-  <h1><%= country ? 'Editar país' : 'Agregar país' %></h1>
+  <% const pageTitle = (typeof title !== 'undefined') ? title : ((typeof mode !== 'undefined') ? (mode === 'edit' ? 'Editar país' : 'Agregar país') : (country ? 'Editar país' : 'Agregar país')); %>
+  <h1><%= pageTitle %></h1>
 
   <% if (Array.isArray(errors) && errors.length) { %>
     <div class="alert alert-danger">
@@ -31,7 +32,15 @@
 
     <div class="mb-3">
       <label for="languages" class="form-label">Languages (formato: code:name por línea)</label>
-  <textarea id="languages" name="languages" class="form-control <%= errors.find(e=>e.field==='languages') ? 'is-invalid' : '' %>" rows="3" placeholder="spa:Spanish\neng:English"><%= country && country.languages ? Array.from(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+  <textarea id="languages" name="languages" class="form-control <%= errors.find(e=>e.field==='languages') ? 'is-invalid' : '' %>" rows="3" placeholder="spa:Spanish\neng:English"><% if (country && country.languages) { %>
+    <% if (country.languages instanceof Map) { %>
+      <%= Array.from(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') %>
+    <% } else if (Array.isArray(country.languages)) { %>
+      <%= country.languages.map(([k,v])=> `${k}:${v}`).join('\n') %>
+    <% } else { %>
+      <%= Object.entries(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') %>
+    <% } %>
+  <% } %></textarea>
       <% if (errors.find(e=>e.field==='languages')) { %>
         <div class="invalid-feedback d-block"><%= errors.find(e=>e.field==='languages').message %></div>
       <% } %>
@@ -77,7 +86,15 @@
 
     <div class="mb-3">
       <label for="gini" class="form-label">Gini (formato: year:value por línea)</label>
-  <textarea id="gini" name="gini" class="form-control <%= errors.find(e=>e.field==='gini') ? 'is-invalid' : '' %>" rows="2" placeholder="2019:42.5\n2020:43.1"><%= country && country.gini ? Array.from(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') : '' %></textarea>
+  <textarea id="gini" name="gini" class="form-control <%= errors.find(e=>e.field==='gini') ? 'is-invalid' : '' %>" rows="2" placeholder="2019:42.5\n2020:43.1"><% if (country && country.gini) { %>
+    <% if (country.gini instanceof Map) { %>
+      <%= Array.from(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') %>
+    <% } else if (Array.isArray(country.gini)) { %>
+      <%= country.gini.map(([k,v])=> `${k}:${v}`).join('\n') %>
+    <% } else { %>
+      <%= Object.entries(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') %>
+    <% } %>
+  <% } %></textarea>
       <% if (errors.find(e=>e.field==='gini')) { %>
         <div class="invalid-feedback d-block"><%= errors.find(e=>e.field==='gini').message %></div>
       <% } %>

@@ -89,7 +89,7 @@ export const mostrarPaises = async (req, res) => {
 // Renderiza formulario para crear un nuevo país
 export const mostrarFormularioNuevo = (req, res) => {
     try {
-    res.render('formCountry', { country: null, navbarLinks: links, title: 'Agregar país', errors: [] });
+        res.render('formCountry', { country: null, navbarLinks: links, title: 'Agregar país', mode: 'create', errors: [] });
     } catch (error) {
         res.status(500).send('Error al mostrar el formulario');
     }
@@ -164,7 +164,7 @@ export const mostrarFormularioEditar = async (req, res) => {
             return obj;
         })(countryDoc);
 
-    res.render('formCountry', { country, navbarLinks: links, title: 'Editar país', errors: [] });
+    res.render('formCountry', { country, navbarLinks: links, title: 'Editar país', mode: 'edit', errors: [] });
     } catch (error) {
         res.status(404).send({ message: error.message });
     }
@@ -184,6 +184,22 @@ export const crearPais = async (req, res) => {
             }
         }
 
+        const parseCommaList = (val, fieldName = 'campo') => {
+            if (!val) return [];
+            let arr = [];
+            if (Array.isArray(val)) arr = val.map(s => String(s).trim()).filter(Boolean);
+            else if (typeof val === 'string') arr = val.split(',').map(s => s.trim()).filter(Boolean);
+            else arr = [];
+
+            // Rechazar entradas que contengan cualquier dígito
+            for (const item of arr) {
+                if (/\d/.test(item)) {
+                    throw new Error(`No se permiten dígitos en ${fieldName}: "${item}"`);
+                }
+            }
+            return arr;
+        };
+
         const parseLanguages = (val) => {
             if (!val) return {};
             if (typeof val === 'object') return val;
@@ -220,8 +236,12 @@ export const crearPais = async (req, res) => {
             return {};
         };
 
-        payload.languages = parseLanguages(payload.languages);
-        payload.gini = parseGini(payload.gini);
+    payload.languages = parseLanguages(payload.languages);
+    payload.gini = parseGini(payload.gini);
+    // Aceptar campos separados por coma desde el formulario
+    payload.capital = parseCommaList(payload.capital, 'capital');
+    payload.borders = parseCommaList(payload.borders, 'borders').map(s => s.toUpperCase());
+    payload.timezones = parseCommaList(payload.timezones, 'timezones');
 
         const nuevo = await serviceAgregar(payload);
         // Si el cliente espera HTML (envío desde formulario), redirigir a la lista
@@ -233,7 +253,14 @@ export const crearPais = async (req, res) => {
         return res.status(201).json({ ok: true, data: nuevo, message: 'País creado correctamente' });
     } catch (error) {
         console.error('crearPais error:', error);
-        res.status(500).json({ ok: false, error: 'Ocurrió un error al crear el país. Intenta nuevamente.' });
+        const accept = req.headers?.accept || '';
+        const xrw = req.headers['x-requested-with'] || '';
+        // Si la petición viene de un navegador (HTML), re-renderizar el formulario con el error
+        if (accept.includes('text/html') || !xrw || xrw.toLowerCase() !== 'xmlhttprequest') {
+            const country = payload || {};
+            return res.status(400).render('formCountry', { country, navbarLinks: links, title: 'Agregar país', mode: 'create', errors: [{ field: null, message: error.message }] });
+        }
+        return res.status(400).json({ ok: false, error: error.message || 'Ocurrió un error al crear el país. Intenta nuevamente.' });
     }
 }
 
@@ -250,6 +277,21 @@ export const editarPais = async (req, res) => {
             }
         }
 
+        const parseCommaList = (val, fieldName = 'campo') => {
+            if (!val) return [];
+            let arr = [];
+            if (Array.isArray(val)) arr = val.map(s => String(s).trim()).filter(Boolean);
+            else if (typeof val === 'string') arr = val.split(',').map(s => s.trim()).filter(Boolean);
+            else arr = [];
+
+            for (const item of arr) {
+                if (/\d/.test(item)) {
+                    throw new Error(`No se permiten dígitos en ${fieldName}: "${item}"`);
+                }
+            }
+            return arr;
+        };
+
         const parseLanguages = (val) => {
             if (!val) return {};
             if (typeof val === 'object') return val;
@@ -286,8 +328,12 @@ export const editarPais = async (req, res) => {
             return {};
         };
 
-        body.languages = parseLanguages(body.languages);
-        body.gini = parseGini(body.gini);
+    body.languages = parseLanguages(body.languages);
+    body.gini = parseGini(body.gini);
+    // Parsear campos que pueden venir como texto separados por coma
+    body.capital = parseCommaList(body.capital, 'capital');
+    body.borders = parseCommaList(body.borders, 'borders').map(s => s.toUpperCase());
+    body.timezones = parseCommaList(body.timezones, 'timezones');
 
         const actualizado = await serviceEditar(id, body);
         // Si el cliente espera HTML (envío desde formulario), redirigir a la lista
@@ -299,7 +345,14 @@ export const editarPais = async (req, res) => {
         return res.json({ ok: true, data: actualizado, message: 'País actualizado correctamente' });
     } catch (error) {
         console.error('editarPais error:', error);
-        res.status(500).json({ ok: false, error: 'Ocurrió un error al editar el país. Intenta nuevamente.' });
+        const accept = req.headers?.accept || '';
+        const xrw = req.headers['x-requested-with'] || '';
+        if (accept.includes('text/html') || !xrw || xrw.toLowerCase() !== 'xmlhttprequest') {
+            // Re-render con el body parcial para que el usuario pueda corregir
+            const country = body || {};
+            return res.status(400).render('formCountry', { country, navbarLinks: links, title: 'Editar país', mode: 'edit', errors: [{ field: null, message: error.message }] });
+        }
+        return res.status(400).json({ ok: false, error: error.message || 'Ocurrió un error al editar el país. Intenta nuevamente.' });
     }
 }
 

@@ -3,7 +3,8 @@ import { connectDB } from './src/config/dbConfig.mjs';
 import path from 'path';
 import expressLayouts from 'express-ejs-layouts';
 import routerCountries from './src/routes/countryRoutes.mjs';
-import links from './src/config/navBarCountryLinks.mjs';
+import router from './src/routes/basicRoutes.mjs';
+
 
 
 
@@ -26,12 +27,7 @@ app.use(express.static(path.resolve('./src/public')));
 
 connectDB();
 
-app.get('/', (req, res) => {
-  res.render('index',{
-    title: 'Pagina Principal',
-    navbarLinks: links
-  });
-});
+app.use('/', router);
 
 app.use('/countries', routerCountries);
 
