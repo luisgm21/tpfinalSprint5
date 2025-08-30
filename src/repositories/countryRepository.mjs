@@ -28,6 +28,20 @@ class CountryRepository extends IRepository {
         }        
     }
 
+    async obtenerUltimo() {
+        try {
+            // Intentar ordenar por createdAt si está disponible
+            let country = await Country.findOne({}).sort({ createdAt: -1 }).limit(1);
+            if (!country) {
+                // Fallback: ordenar por _id descendente
+                country = await Country.findOne({}).sort({ _id: -1 }).limit(1);
+            }
+            return country;
+        } catch (error) {
+            throw new Error(`Error al obtener el último país: ${error.message}`);
+        }
+    }
+
 
     async agregar(countryData) {
         try {

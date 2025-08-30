@@ -9,6 +9,17 @@ import router from './src/routes/basicRoutes.mjs';
 
 
 const app = express();
+
+// Global error handlers to capture unexpected exits during development
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+});
+process.on('exit', (code) => {
+    console.log('Process exiting with code', code);
+});
 const PORT = process.env.PORT || 3000;
 
 // (debug instrumentation removed)

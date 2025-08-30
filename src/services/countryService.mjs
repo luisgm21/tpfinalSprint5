@@ -19,3 +19,7 @@ export async function editarPais(id, countryData){
 export async function eliminarPais(id){
     return await countryRepository.eliminar(id);
 }
+
+export async function obtenerUltimoPais(){
+    return await countryRepository.obtenerUltimo();
+}

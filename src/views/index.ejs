@@ -1,4 +1,50 @@
 <section>
   <h1>Bienvenido a mi sitio web</h1>
   <p>Este es un ejemplo de cómo usar layouts en EJS con `express-ejs-layouts`.</p>
+
+  <% var _last = (typeof locals !== 'undefined' && locals.lastCountry) ? locals.lastCountry : null; %>
+  <% if (_last) { %>
+    <h2 class="mt-4">Último país agregado: <%= _last.name %></h2>
+    <div class="card mb-3">
+      <div class="card-body">
+        <p><strong>Nombre:</strong> <%= _last.name %></p>
+        <p><strong>Capital(es):</strong> <%= _last.capital.join(', ') %></p>
+        <p><strong>Población:</strong> <%= _last.population?.toLocaleString() || 'N/A' %></p>
+        <p><strong>Área:</strong> <%= _last.area?.toLocaleString() || 'N/A' %> km²</p>
+        <p><strong>Código (cca3):</strong> <%= _last.abr %></p>
+        <p><strong>Fronteras:</strong> <% if (_last.borders && _last.borders.length) { %><%= _last.borders.join(', ') %><% } else { %> - <% } %></p>
+        <p><strong>Timezones:</strong></p>
+        <% if (_last.timezones && _last.timezones.length) { %>
+          <ul>
+            <% _last.timezones.forEach(tz => { %>
+              <li><%= tz %></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          -
+        <% } %>
+        <p><strong>Gini:</strong></p>
+        <% if (_last.gini && Object.keys(_last.gini).length) { %>
+          <ul>
+            <% Object.entries(_last.gini).forEach(([yr,val]) => { %>
+              <li><%= yr %>: <%= val %></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          -
+        <% } %>
+        <p><strong>Languages:</strong></p>
+        <% if (_last.languages && Object.keys(_last.languages).length) { %>
+          <ul>
+            <% Object.entries(_last.languages).forEach(([k,v]) => { %>
+              <li><%= k %>: <%= v %></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          -
+        <% } %>
+        <p><strong>Creador:</strong> <%= _last.creador || '-' %></p>
+      </div>
+    </div>
+  <% } %>
 </section>
