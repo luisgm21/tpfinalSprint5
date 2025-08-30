@@ -146,3 +146,25 @@ footer {
     .action-icon:hover { background: rgba(15,23,42,0.06); color: #0b74ff; text-decoration: none; }
     .action-icon.delete { color: #b91c1c; }
     .action-icon.delete:hover { background: rgba(185,28,28,0.08); color: #ff4d4d; }
+
+/* Index & About styles */
+.hero {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    padding: 36px 20px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+.card--highlight {
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+}
+.muted-small { color: #6b7280; font-size: 0.95rem; }
+.info-list { list-style: disc; padding-left: 1.25rem; }
+
+/* Contact form tweaks */
+.contact-form .form-label { font-weight: 600; }
+.contact-form .btn-primary { background: #0b74ff; border-color: #0b74ff; }
+.contact-form .btn-primary:hover { background: #095ed6; }
+
+/* Footer dark background helper */
+.footer-dark { background: #111827; color: #fff; }
