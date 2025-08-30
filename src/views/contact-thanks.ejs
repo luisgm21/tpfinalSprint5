@@ -1,0 +1,11 @@
+<section>
+  <h1><%= title || 'Gracias' %></h1>
+  <p>Gracias por contactarnos, <strong><%= contact && contact.name %></strong>. Hemos recibido tu mensaje y te responderemos a <em><%= contact && contact.email %></em>.</p>
+  <div class="card mt-3">
+    <div class="card-body">
+      <h5 class="card-title">Tu mensaje</h5>
+      <p class="card-text"><%= contact && contact.message %></p>
+    </div>
+  </div>
+  <a href="/" class="btn btn-secondary mt-3">Volver</a>
+</section>
