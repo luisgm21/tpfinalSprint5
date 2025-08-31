@@ -9,18 +9,23 @@
     <div class="card mb-3">
       <div class="card-body">
         <p><strong>Nombre:</strong> <%= _last.name %></p>
-        <p><strong>Capital(es):</strong> <%= _last.capital.join(', ') %></p>
+  <% // Acomodar capital cuando es string o array --> mostrar '-' si no existe %>
+  <% const _capitals = (Array.isArray(_last.capital) ? _last.capital.join(', ') : (_last.capital || '-')); %>
+  <p><strong>Capital(es):</strong> <%= _capitals %></p>
         <p><strong>Población:</strong> <%= _last.population?.toLocaleString() || 'N/A' %></p>
         <p><strong>Área:</strong> <%= _last.area?.toLocaleString() || 'N/A' %> km²</p>
         <p><strong>Código (cca3):</strong> <%= _last.abr %></p>
-        <p><strong>Fronteras:</strong> <% if (_last.borders && _last.borders.length) { %><%= _last.borders.join(', ') %><% } else { %> - <% } %></p>
+        <% const _borders = Array.isArray(_last.borders) ? _last.borders.join(', ') : (_last.borders || '-'); %>
+        <p><strong>Fronteras:</strong> <%= _borders %></p>
         <p><strong>Timezones:</strong></p>
-        <% if (_last.timezones && _last.timezones.length) { %>
+        <% if (Array.isArray(_last.timezones) && _last.timezones.length) { %>
           <ul>
             <% _last.timezones.forEach(tz => { %>
               <li><%= tz %></li>
             <% }) %>
           </ul>
+        <% } else if (_last.timezones) { %>
+          <p><%= _last.timezones %></p>
         <% } else { %>
           -
         <% } %>

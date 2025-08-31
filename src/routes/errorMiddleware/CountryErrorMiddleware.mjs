@@ -15,13 +15,22 @@ export const handleValidationCountryErrors = (req, res, next) => {
             return res.status(400).json({ ok: false, message: 'Error de validación', errors: errArray });
         }
 
-        // Para peticiones desde navegador, re-renderizar el formulario de país con errores
-        const body = req.body || {};
-        const country = Object.assign({}, body);
-        try { country.languages = body.languages ? Object.entries(body.languages) : []; } catch(e) { country.languages = []; }
-        try { country.gini = body.gini ? Object.entries(body.gini) : []; } catch(e) { country.gini = []; }
+    // Para peticiones desde navegador, re-renderizar el formulario de país con errores
+    const body = req.body || {};
+    const country = Object.assign({}, body);
 
-        return res.status(400).render('formCountry', { country, navbarLinks: req.navbarLinks || [], title: 'Error en formulario', errors: errArray });
+    // No aplicar Object.entries sobre strings (provoca descomposición por caracter).
+    // Dejamos los campos tal cual vinieron del formulario; la vista es responsable
+    // de mostrar strings, objetos o maps correctamente.
+    country.languages = body.languages || '';
+    country.gini = body.gini || '';
+
+    // Determinar si estamos en modo 'create' o 'edit' según existencia de id en params
+    const mode = req.params && req.params.id ? 'edit' : 'create';
+    if (mode === 'create') delete country._id; // evitar que el template piense que es edición
+
+    const title = mode === 'create' ? 'Agregar país' : 'Editar país';
+    return res.status(400).render('formCountry', { country, navbarLinks: req.navbarLinks || [], title, mode, errors: errArray });
     }
     next();
 };

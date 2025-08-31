@@ -266,9 +266,10 @@ export const crearPais = async (req, res) => {
 
 // Endpoint para editar país (acepta JSON)
 export const editarPais = async (req, res) => {
+    let body = {};
     try {
         const { id } = req.params;
-        let body = req.body || {};
+        body = req.body || {};
         if (body.__json_payload && typeof body.__json_payload === 'string') {
             try {
                 body = JSON.parse(body.__json_payload);

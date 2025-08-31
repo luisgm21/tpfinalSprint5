@@ -10,10 +10,12 @@ export function validateCreateCountry(payload) {
 
     // capital: cada elemento 3-90 caracteres (si existe)
     if (p.capital) {
-        if (!Array.isArray(p.capital)) {
-            errors.push({ field: 'capital', message: 'Capital debe ser una lista de nombres.' });
+        // aceptar string o array desde distintos orígenes
+        const caps = Array.isArray(p.capital) ? p.capital : (typeof p.capital === 'string' ? p.capital.split(',').map(s=>s.trim()).filter(Boolean) : null);
+        if (!caps) {
+            errors.push({ field: 'capital', message: 'Capital debe ser una lista de nombres o una cadena separada por comas.' });
         } else {
-            p.capital.forEach((c, i) => {
+            caps.forEach((c, i) => {
                 if (!c || typeof c !== 'string' || c.trim().length < 3 || c.trim().length > 90) {
                     errors.push({ field: 'capital', message: `La capital en la posición ${i + 1} debe tener entre 3 y 90 caracteres.` });
                 }
@@ -53,6 +55,7 @@ export function validateCreateCountry(payload) {
 
     // gini: valores entre 0 y 100
     if (p.gini) {
+        // aceptar objeto o string en formato "year:value\n..."
         if (typeof p.gini === 'object') {
             Object.keys(p.gini).forEach(year => {
                 const val = Number(p.gini[year]);
@@ -60,8 +63,23 @@ export function validateCreateCountry(payload) {
                     errors.push({ field: 'gini', message: `Gini para ${year} debe ser un número entre 0 y 100.` });
                 }
             });
+        } else if (typeof p.gini === 'string') {
+            const lines = p.gini.split('\n').map(l=>l.trim()).filter(Boolean);
+            lines.forEach(line => {
+                const idx = line.indexOf(':');
+                if (idx === -1) {
+                    errors.push({ field: 'gini', message: 'Formato de Gini inválido. Use year:value por línea.' });
+                    return;
+                }
+                const year = line.slice(0, idx).trim();
+                const val = Number(line.slice(idx + 1).trim());
+                if (!year || Number.isNaN(val) || val < 0 || val > 100) {
+                    errors.push({ field: 'gini', message: `Gini para ${year} debe ser un número entre 0 y 100.` });
+                }
+            });
         } else {
-            errors.push({ field: 'gini', message: 'Gini debe enviarse como pares year:value.' });
+            // otros tipos no válidos
+            errors.push({ field: 'gini', message: 'Gini debe enviarse como pares year:value o como objeto.' });
         }
     }
 
@@ -94,19 +112,49 @@ export function parseJsonPayload(req, res, next) {
 // express-validator chains que reflejan las reglas existentes
 export const createRules = [
     body('name').isString().trim().isLength({ min: 3, max: 90 }).withMessage('El nombre oficial debe tener entre 3 y 90 caracteres.'),
-    body('capital').optional().isArray().withMessage('Capital debe ser una lista.'),
+    // capital puede venir como array o string (coma separada)
+    body('capital').optional().custom(value => {
+        if (Array.isArray(value)) return true;
+        if (typeof value === 'string') return true;
+        throw new Error('Capital debe ser una lista o una cadena separada por comas.');
+    }),
     body('capital.*').optional().isString().trim().isLength({ min: 3, max: 90 }).withMessage('Cada capital debe tener entre 3 y 90 caracteres.'),
-    body('borders').optional().isArray().withMessage('Fronteras debe ser una lista de códigos.'),
+    // borders puede ser array o string; validar códigos
+    body('borders').optional().custom(value => {
+        if (Array.isArray(value)) return true;
+        if (typeof value === 'string') return true;
+        throw new Error('Fronteras debe ser una lista o una cadena separada por comas.');
+    }),
     body('borders.*').optional().isString().matches(/^[A-Z]{3}$/).withMessage('Cada código de frontera debe ser 3 letras mayúsculas.'),
     body('area').optional().isFloat({ gt: 0 }).withMessage('Área debe ser un número positivo.'),
     body('population').optional().isInt({ gt: 0 }).withMessage('Población debe ser un entero positivo.'),
+    // timezones puede ser array o string
+    body('timezones').optional().custom(value => {
+        if (Array.isArray(value)) return true;
+        if (typeof value === 'string') return true;
+        throw new Error('Timezones debe ser una lista o una cadena separada por comas.');
+    }),
+    // gini puede ser objeto o string; validar ambos formatos
     body('gini').optional().custom(value => {
-        if (typeof value !== 'object') throw new Error('Gini debe enviarse como pares year:value.');
-        for (const k of Object.keys(value)) {
-            const v = Number(value[k]);
-            if (Number.isNaN(v) || v < 0 || v > 100) throw new Error(`Gini para ${k} debe ser un número entre 0 y 100.`);
+        if (typeof value === 'object') {
+            for (const k of Object.keys(value)) {
+                const v = Number(value[k]);
+                if (Number.isNaN(v) || v < 0 || v > 100) throw new Error(`Gini para ${k} debe ser un número entre 0 y 100.`);
+            }
+            return true;
         }
-        return true;
+        if (typeof value === 'string') {
+            const lines = value.split('\n').map(l=>l.trim()).filter(Boolean);
+            for (const line of lines) {
+                const idx = line.indexOf(':');
+                if (idx === -1) throw new Error('Formato de Gini inválido. Use year:value por línea.');
+                const year = line.slice(0, idx).trim();
+                const num = Number(line.slice(idx + 1).trim());
+                if (!year || Number.isNaN(num) || num < 0 || num > 100) throw new Error(`Gini para ${year} debe ser un número entre 0 y 100.`);
+            }
+            return true;
+        }
+        throw new Error('Gini debe enviarse como pares year:value o como objeto.');
     })
 ];
 

@@ -13,7 +13,8 @@
     </div>
   <% } %>
 
-  <form id="countryForm" method="post" action="<%= country ? ('/countries/' + country._id) : '/countries' %>">
+  <% const formAction = (typeof mode !== 'undefined' && mode === 'edit' && country && country._id) ? ('/countries/' + country._id) : '/countries'; %>
+  <form id="countryForm" method="post" action="<%= formAction %>">
     <div class="mb-3">
       <label for="name" class="form-label">Nombre (oficial)</label>
   <input type="text" id="name" name="name" class="form-control <%= errors.find(e=>e.field==='name') ? 'is-invalid' : '' %>" value="<%= country ? country.name : '' %>">
@@ -24,7 +25,8 @@
 
     <div class="mb-3">
       <label for="capital" class="form-label">Capital(es) (separadas por coma)</label>
-  <input type="text" id="capital" name="capital" class="form-control <%= errors.find(e=>e.field==='capital') ? 'is-invalid' : '' %>" placeholder="Buenos Aires, La Plata" value="<%= country && country.capital ? country.capital.join(', ') : '' %>">
+  <% const _capInput = (country && country.capital) ? (Array.isArray(country.capital) ? country.capital.join(', ') : String(country.capital)) : ''; %>
+  <input type="text" id="capital" name="capital" class="form-control <%= errors.find(e=>e.field==='capital') ? 'is-invalid' : '' %>" placeholder="Buenos Aires, La Plata" value="<%= _capInput %>">
       <% if (errors.find(e=>e.field==='capital')) { %>
         <div class="invalid-feedback"><%= errors.find(e=>e.field==='capital').message %></div>
       <% } %>
@@ -33,11 +35,13 @@
     <div class="mb-3">
       <label for="languages" class="form-label">Languages (formato: code:name por línea)</label>
   <textarea id="languages" name="languages" class="form-control <%= errors.find(e=>e.field==='languages') ? 'is-invalid' : '' %>" rows="3" placeholder="spa:Spanish\neng:English"><% if (country && country.languages) { %>
-    <% if (country.languages instanceof Map) { %>
+    <% if (typeof country.languages === 'string') { %>
+      <%= country.languages %>
+    <% } else if (country.languages instanceof Map) { %>
       <%= Array.from(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') %>
     <% } else if (Array.isArray(country.languages)) { %>
       <%= country.languages.map(([k,v])=> `${k}:${v}`).join('\n') %>
-    <% } else { %>
+    <% } else if (typeof country.languages === 'object') { %>
       <%= Object.entries(country.languages).map(([k,v])=> `${k}:${v}`).join('\n') %>
     <% } %>
   <% } %></textarea>
@@ -49,7 +53,8 @@
 
     <div class="mb-3">
       <label for="borders" class="form-label">Fronteras (códigos, separadas por coma)</label>
-  <input type="text" id="borders" name="borders" class="form-control <%= errors.find(e=>e.field==='borders') ? 'is-invalid' : '' %>" placeholder="BRA, CHL, URY" value="<%= country && country.borders ? country.borders.join(', ') : '' %>">
+  <% const _bordersInput = (country && country.borders) ? (Array.isArray(country.borders) ? country.borders.join(', ') : String(country.borders)) : ''; %>
+  <input type="text" id="borders" name="borders" class="form-control <%= errors.find(e=>e.field==='borders') ? 'is-invalid' : '' %>" placeholder="BRA, CHL, URY" value="<%= _bordersInput %>">
       <% if (errors.find(e=>e.field==='borders')) { %>
         <div class="invalid-feedback"><%= errors.find(e=>e.field==='borders').message %></div>
       <% } %>
@@ -78,7 +83,8 @@
 
     <div class="mb-3">
       <label for="timezones" class="form-label">Timezones (separadas por coma)</label>
-  <input type="text" id="timezones" name="timezones" class="form-control <%= errors.find(e=>e.field==='timezones') ? 'is-invalid' : '' %>" placeholder="UTC-03:00" value="<%= country && country.timezones ? country.timezones.join(', ') : '' %>">
+  <% const _tzInput = (country && country.timezones) ? (Array.isArray(country.timezones) ? country.timezones.join(', ') : String(country.timezones)) : ''; %>
+  <input type="text" id="timezones" name="timezones" class="form-control <%= errors.find(e=>e.field==='timezones') ? 'is-invalid' : '' %>" placeholder="UTC-03:00" value="<%= _tzInput %>">
       <% if (errors.find(e=>e.field==='timezones')) { %>
         <div class="invalid-feedback"><%= errors.find(e=>e.field==='timezones').message %></div>
       <% } %>
@@ -87,11 +93,13 @@
     <div class="mb-3">
       <label for="gini" class="form-label">Gini (formato: year:value por línea)</label>
   <textarea id="gini" name="gini" class="form-control <%= errors.find(e=>e.field==='gini') ? 'is-invalid' : '' %>" rows="2" placeholder="2019:42.5\n2020:43.1"><% if (country && country.gini) { %>
-    <% if (country.gini instanceof Map) { %>
+    <% if (typeof country.gini === 'string') { %>
+      <%= country.gini %>
+    <% } else if (country.gini instanceof Map) { %>
       <%= Array.from(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') %>
     <% } else if (Array.isArray(country.gini)) { %>
       <%= country.gini.map(([k,v])=> `${k}:${v}`).join('\n') %>
-    <% } else { %>
+    <% } else if (typeof country.gini === 'object') { %>
       <%= Object.entries(country.gini).map(([k,v])=> `${k}:${v}`).join('\n') %>
     <% } %>
   <% } %></textarea>

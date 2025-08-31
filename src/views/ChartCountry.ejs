@@ -32,7 +32,7 @@
                     <% countries.forEach(country => { %>
                         <tr>
                             <td><%= country.name %></td>
-                            <td><%= country.capital.join(', ') %></td>
+                            <td><%= Array.isArray(country.capital) ? country.capital.join(', ') : (country.capital || '-') %></td>
                             <td><%= country.population?.toLocaleString() || 'N/A' %></td>
                             <td>
                                 <% 
@@ -54,20 +54,24 @@
                             <td><%= country.area?.toLocaleString() || 'N/A' %> km²</td>
                             <td><%= country.abr %></td>
                             <td>
-                                <% if (country.borders && country.borders.length > 0) { %>
+                                <% if (Array.isArray(country.borders) && country.borders.length > 0) { %>
                                     <% const borderNames = country.borders.map(code => codeToName[code] || code); %>
                                     <%= borderNames.join(', ') %>
+                                <% } else if (country.borders) { %>
+                                    <%= country.borders %>
                                 <% } else { %>
                                     -
                                 <% } %>
                             </td>
                             <td>
-                                <% if (country.timezones && country.timezones.length > 0) { %>
+                                <% if (Array.isArray(country.timezones) && country.timezones.length > 0) { %>
                                     <ul class="mb-0 ps-3">
                                         <% country.timezones.forEach(tz => { %>
                                             <li><%= tz %></li>
                                         <% }) %>
                                     </ul>
+                                <% } else if (country.timezones) { %>
+                                    <%= country.timezones %>
                                 <% } else { %>
                                     -
                                 <% } %>
