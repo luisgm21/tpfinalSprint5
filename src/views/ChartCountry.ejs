@@ -78,6 +78,11 @@
                             </td>
                             <td><%= country.creador || '-' %></td>
                             <td class="text-center">
+                                <!-- Ver (eye) -->
+                                <% const countryJsonAttr = JSON.stringify(country).replace(/'/g, "&#39;"); %>
+                                <button type="button" title="Ver" class="action-icon me-2 btn btn-link p-0" data-country="<%= countryJsonAttr %>" onclick="viewCountryFromBtn(this)">
+                                    <i class="fa fa-eye"></i>
+                                </button>
                                 <a href="/countries/edit/<%= country._id %>" title="Editar" class="action-icon me-2">
                                     <i class="fa fa-pen"></i>
                                 </a>
@@ -137,3 +142,57 @@
             }
         }
     </script>
+        <!-- Modal para ver país -->
+        <div class="modal fade" id="viewCountryModal" tabindex="-1" aria-labelledby="viewCountryLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewCountryLabel">Detalles del país</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="viewCountryBody">
+                        <!-- contenido inyectado por JS -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function viewCountryFromBtn(btn) {
+                try {
+                    const raw = btn.getAttribute('data-country') || '{}';
+                    const country = JSON.parse(raw);
+                    viewCountryRender(country);
+                } catch (e) {
+                    console.error('Error parse country data', e);
+                    alert('No se pudieron cargar los datos del país');
+                }
+            }
+
+            function viewCountryRender(country) {
+                const body = document.getElementById('viewCountryBody');
+                if (!body) return;
+                const toList = (val) => {
+                    if (!val) return '-';
+                    if (Array.isArray(val)) return val.join(', ');
+                    if (typeof val === 'object') return Object.entries(val).map(([k,v]) => `${k}: ${v}`).join('<br>');
+                    return String(val);
+                };
+                const html = `
+                    <h4>${country.name || '-'} <small class="text-muted">(${country.abr || '-'})</small></h4>
+                    <p><strong>Capital(es):</strong> ${toList(country.capital)}</p>
+                    <p><strong>Población:</strong> ${country.population ? Number(country.population).toLocaleString() : 'N/A'}</p>
+                    <p><strong>Área:</strong> ${country.area ? Number(country.area).toLocaleString() + ' km²' : 'N/A'}</p>
+                    <p><strong>Fronteras:</strong> ${toList(country.borders)}</p>
+                    <p><strong>Timezones:</strong> ${toList(country.timezones)}</p>
+                    <p><strong>Languages:</strong><br>${toList(country.languages)}</p>
+                    <p><strong>Gini:</strong><br>${toList(country.gini)}</p>
+                `;
+                body.innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('viewCountryModal'));
+                modal.show();
+            }
+        </script>
