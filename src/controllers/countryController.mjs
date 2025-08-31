@@ -184,17 +184,18 @@ export const crearPais = async (req, res) => {
             }
         }
 
-        const parseCommaList = (val, fieldName = 'campo') => {
+        const parseCommaList = (val, fieldName = 'campo', allowDigits = false) => {
             if (!val) return [];
             let arr = [];
             if (Array.isArray(val)) arr = val.map(s => String(s).trim()).filter(Boolean);
             else if (typeof val === 'string') arr = val.split(',').map(s => s.trim()).filter(Boolean);
             else arr = [];
-
-            // Rechazar entradas que contengan cualquier dígito
-            for (const item of arr) {
-                if (/\d/.test(item)) {
-                    throw new Error(`No se permiten dígitos en ${fieldName}: "${item}"`);
+            // Rechazar entradas que contengan cualquier dígito, salvo cuando se permita (ej. timezones)
+            if (!allowDigits) {
+                for (const item of arr) {
+                    if (/\d/.test(item)) {
+                        throw new Error(`No se permiten dígitos en ${fieldName}: "${item}"`);
+                    }
                 }
             }
             return arr;
@@ -241,7 +242,7 @@ export const crearPais = async (req, res) => {
     // Aceptar campos separados por coma desde el formulario
     payload.capital = parseCommaList(payload.capital, 'capital');
     payload.borders = parseCommaList(payload.borders, 'borders').map(s => s.toUpperCase());
-    payload.timezones = parseCommaList(payload.timezones, 'timezones');
+    payload.timezones = parseCommaList(payload.timezones, 'timezones', true);
 
         const nuevo = await serviceAgregar(payload);
         // Si el cliente espera HTML (envío desde formulario), redirigir a la lista
@@ -278,16 +279,18 @@ export const editarPais = async (req, res) => {
             }
         }
 
-        const parseCommaList = (val, fieldName = 'campo') => {
+        const parseCommaList = (val, fieldName = 'campo', allowDigits = false) => {
             if (!val) return [];
             let arr = [];
             if (Array.isArray(val)) arr = val.map(s => String(s).trim()).filter(Boolean);
             else if (typeof val === 'string') arr = val.split(',').map(s => s.trim()).filter(Boolean);
             else arr = [];
-
-            for (const item of arr) {
-                if (/\d/.test(item)) {
-                    throw new Error(`No se permiten dígitos en ${fieldName}: "${item}"`);
+            // Rechazar entradas que contengan cualquier dígito, salvo cuando se permita (ej. timezones)
+            if (!allowDigits) {
+                for (const item of arr) {
+                    if (/\d/.test(item)) {
+                        throw new Error(`No se permiten dígitos en ${fieldName}: "${item}"`);
+                    }
                 }
             }
             return arr;
@@ -334,7 +337,7 @@ export const editarPais = async (req, res) => {
     // Parsear campos que pueden venir como texto separados por coma
     body.capital = parseCommaList(body.capital, 'capital');
     body.borders = parseCommaList(body.borders, 'borders').map(s => s.toUpperCase());
-    body.timezones = parseCommaList(body.timezones, 'timezones');
+    body.timezones = parseCommaList(body.timezones, 'timezones', true);
 
         const actualizado = await serviceEditar(id, body);
         // Si el cliente espera HTML (envío desde formulario), redirigir a la lista
