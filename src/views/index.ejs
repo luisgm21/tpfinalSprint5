@@ -1,6 +1,7 @@
-<section>
-  <h1>Bienvenido a mi sitio web</h1>
-  <p>Este es un ejemplo de cómo usar layouts en EJS con `express-ejs-layouts`.</p>
+<div class="container mt-4">
+  <div class="hero">
+    <h1 class="page-title">Demo: gestión de países</h1>
+    <p class="muted-small">Proyecto de ejemplo con CRUD, búsquedas y visualización usando Express, EJS y DataTables.</p>
 
   <% var _last = (typeof locals !== 'undefined' && locals.lastCountry) ? locals.lastCountry : null; %>
   <% if (_last) { %>
@@ -47,4 +48,5 @@
       </div>
     </div>
   <% } %>
-</section>
+  </div>
+</div>
