@@ -242,6 +242,13 @@ export const crearPais = async (req, res) => {
     // Aceptar campos separados por coma desde el formulario
     payload.capital = parseCommaList(payload.capital, 'capital');
     payload.borders = parseCommaList(payload.borders, 'borders').map(s => s.toUpperCase());
+    // comprobar duplicados en borders
+    if (payload.borders && Array.isArray(payload.borders)) {
+        const seen = new Set(payload.borders.map(s => String(s).trim().toUpperCase()));
+        if (seen.size !== payload.borders.length) {
+            throw new Error('No se permiten códigos de frontera repetidos.');
+        }
+    }
     payload.timezones = parseCommaList(payload.timezones, 'timezones', true);
 
         const nuevo = await serviceAgregar(payload);
@@ -337,6 +344,13 @@ export const editarPais = async (req, res) => {
     // Parsear campos que pueden venir como texto separados por coma
     body.capital = parseCommaList(body.capital, 'capital');
     body.borders = parseCommaList(body.borders, 'borders').map(s => s.toUpperCase());
+    // comprobar duplicados en borders
+    if (body.borders && Array.isArray(body.borders)) {
+        const seenB = new Set(body.borders.map(s => String(s).trim().toUpperCase()));
+        if (seenB.size !== body.borders.length) {
+            throw new Error('No se permiten códigos de frontera repetidos.');
+        }
+    }
     body.timezones = parseCommaList(body.timezones, 'timezones', true);
 
         const actualizado = await serviceEditar(id, body);

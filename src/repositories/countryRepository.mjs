@@ -45,6 +45,15 @@ class CountryRepository extends IRepository {
 
     async agregar(countryData) {
         try {
+            // Validar que no haya códigos de frontera repetidos (normalizar a mayúsculas)
+            if (countryData.borders && Array.isArray(countryData.borders)) {
+                const up = countryData.borders.map(s => String(s).trim().toUpperCase());
+                if (new Set(up).size !== up.length) {
+                    throw new Error('No se permiten códigos de frontera repetidos.');
+                }
+                // asegurarnos de guardar la versión normalizada
+                countryData.borders = up;
+            }
             // Crear una nueva instancia del modelo Country
             const newCountry = new Country({
                 name: countryData.name,
@@ -74,6 +83,15 @@ class CountryRepository extends IRepository {
             const existingCountry = await Country.findById(id);
             if (!existingCountry) {
                 throw new Error(`País con id ${id} no encontrado`);
+            }
+
+            // Si vienen borders, comprobar duplicados y normalizar
+            if (countryData.borders && Array.isArray(countryData.borders)) {
+                const up = countryData.borders.map(s => String(s).trim().toUpperCase());
+                if (new Set(up).size !== up.length) {
+                    throw new Error('No se permiten códigos de frontera repetidos.');
+                }
+                countryData.borders = up;
             }
 
             // Preparar los datos a actualizar

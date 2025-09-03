@@ -7,7 +7,7 @@
     <div class="alert alert-danger">
       <ul class="mb-0">
         <% errors.forEach(err => { %>
-          <li><strong><%= err.field %>:</strong> <%= err.message %></li>
+          <li><strong><%= (err.field === 'abr') ? 'Código (cca3)' : err.field %>:</strong> <%= err.message %></li>
         <% }) %>
       </ul>
     </div>
@@ -77,7 +77,10 @@
       </div>
       <div class="col-md-4 mb-3">
         <label for="abr" class="form-label">Código (cca3)</label>
-        <input type="text" id="abr" name="abr" class="form-control" maxlength="3" value="<%= country && country.abr ? country.abr : '' %>">
+        <input type="text" id="abr" name="abr" class="form-control <%= errors.find(e=>e.field==='abr') ? 'is-invalid' : '' %>" maxlength="3" value="<%= country && country.abr ? country.abr : '' %>">
+        <% if (errors.find(e=>e.field==='abr')) { %>
+          <div class="invalid-feedback"><%= errors.find(e=>e.field==='abr').message %></div>
+        <% } %>
       </div>
     </div>
 

@@ -32,6 +32,11 @@ export function validateCreateCountry(payload) {
                     errors.push({ field: 'borders', message: `El código de frontera en la posición ${i + 1} debe ser 3 letras mayúsculas (ej: ARG).` });
                 }
             });
+            // comprobar duplicados (normalizando a mayúsculas)
+            const seen = new Set(p.borders.map(x => String(x).trim().toUpperCase()));
+            if (seen.size !== p.borders.length) {
+                errors.push({ field: 'borders', message: 'No se permiten códigos de frontera repetidos.' });
+            }
         } else if (typeof p.borders === 'string') {
             const parts = p.borders.split(',').map(s => s.trim()).filter(Boolean);
             parts.forEach((b, i) => {
@@ -39,6 +44,12 @@ export function validateCreateCountry(payload) {
                     errors.push({ field: 'borders', message: `El código de frontera en la posición ${i + 1} debe ser 3 letras mayúsculas (ej: ARG).` });
                 }
             });
+            // comprobar duplicados
+            const up = parts.map(x => x.toUpperCase());
+            const seen2 = new Set(up);
+            if (seen2.size !== up.length) {
+                errors.push({ field: 'borders', message: 'No se permiten códigos de frontera repetidos.' });
+            }
         } else {
             errors.push({ field: 'borders', message: 'Fronteras debe ser una lista de códigos (3 letras) o una cadena separada por comas.' });
         }
@@ -101,6 +112,7 @@ export function validateEditCountry(payload) {
 
 // --- Compatibilidad con express-style middlewares ---
 import { body } from 'express-validator';
+import Country from '../models/country.mjs';
 import { handleValidationErrors } from '../routes/errorMiddleware/CountryErrorMiddleware.mjs';
 
 // Parsear __json_payload si viene del formulario y poblar req.body
@@ -130,26 +142,39 @@ export const createRules = [
     body('borders').optional().custom(value => {
         const re = /^[A-Z]{3}$/;
         if (Array.isArray(value)) {
-            for (const v of value) {
-                if (typeof v !== 'string' || !re.test(v.trim())) {
+            const up = value.map(v => String(v).trim().toUpperCase());
+            for (const v of up) {
+                if (!re.test(v)) {
                     throw new Error('Cada código de frontera debe ser 3 letras mayúsculas (ej: ARG).');
                 }
             }
+            // duplicados
+            if (new Set(up).size !== up.length) throw new Error('No se permiten códigos de frontera repetidos.');
             return true;
         }
         if (typeof value === 'string') {
             const parts = value.split(',').map(s => s.trim()).filter(Boolean);
-            for (const p of parts) {
+            const up = parts.map(p => p.toUpperCase());
+            for (const p of up) {
                 if (!re.test(p)) {
                     throw new Error('Cada código de frontera debe ser 3 letras mayúsculas (ej: ARG).');
                 }
             }
+            if (new Set(up).size !== up.length) throw new Error('No se permiten códigos de frontera repetidos.');
             return true;
         }
         throw new Error('Fronteras debe ser una lista o una cadena separada por comas.');
     }),
     body('area').optional().isFloat({ gt: 0 }).withMessage('Área debe ser un número positivo.'),
     body('population').optional().isInt({ gt: 0 }).withMessage('Población debe ser un entero positivo.'),
+        // abr: código cca3 único (3 letras). Validar formato y unicidad en create
+        body('abr').optional().isString().trim().isLength({ min: 3, max: 3 }).withMessage('El código debe tener 3 caracteres').isUppercase().withMessage('El código debe ser mayúsculas').bail()
+            .custom(async value => {
+                const v = String(value).trim().toUpperCase();
+                const found = await Country.findOne({ abr: v });
+                if (found) throw new Error('El código abr ya existe.');
+                return true;
+            }),
     // timezones puede ser array o string
     body('timezones').optional().custom(value => {
         if (Array.isArray(value)) return true;
@@ -180,7 +205,25 @@ export const createRules = [
     })
 ];
 
-export const editRules = createRules;
+// Para editar necesitamos una variante que permita el mismo `abr` para el documento que se está editando
+export const editRules = [
+        ...createRules.filter(r => {
+                // remover la comprobación async original de abr (último elemento que añadimos) para reemplazarla
+                try {
+                        const s = r.builder && r.builder.fields ? r.builder.fields.join() : '';
+                        return !s.includes('abr');
+                } catch(e) { return true; }
+        }),
+        // nuevo validador de abr que permite conservar el mismo valor cuando se edita
+        body('abr').optional().isString().trim().isLength({ min: 3, max: 3 }).withMessage('El código debe tener 3 caracteres').isUppercase().withMessage('El código debe ser mayúsculas').bail()
+            .custom(async (value, { req }) => {
+                const v = String(value).trim().toUpperCase();
+                const id = req.params && req.params.id ? req.params.id : null;
+                const found = await Country.findOne({ abr: v });
+                if (found && String(found._id) !== String(id)) throw new Error('El código abr ya existe en otro país.');
+                return true;
+            })
+];
 
 // Re-exportar el handler genérico definido en errorMiddleware para uniformidad
 export const handleValidationResult = handleValidationErrors;
