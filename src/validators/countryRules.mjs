@@ -23,17 +23,24 @@ export function validateCreateCountry(payload) {
         }
     }
 
-    // borders: cada código 3 letras mayúsculas
+    // borders: cada código 3 letras mayúsculas (acepta array o string coma-separado)
     if (p.borders) {
-        if (!Array.isArray(p.borders)) {
-            errors.push({ field: 'borders', message: 'Fronteras debe ser una lista de códigos (3 letras).' });
-        } else {
-            const re = /^[A-Z]{3}$/;
+        const re = /^[A-Z]{3}$/;
+        if (Array.isArray(p.borders)) {
             p.borders.forEach((b, i) => {
                 if (!b || typeof b !== 'string' || !re.test(b.trim())) {
                     errors.push({ field: 'borders', message: `El código de frontera en la posición ${i + 1} debe ser 3 letras mayúsculas (ej: ARG).` });
                 }
             });
+        } else if (typeof p.borders === 'string') {
+            const parts = p.borders.split(',').map(s => s.trim()).filter(Boolean);
+            parts.forEach((b, i) => {
+                if (!re.test(b)) {
+                    errors.push({ field: 'borders', message: `El código de frontera en la posición ${i + 1} debe ser 3 letras mayúsculas (ej: ARG).` });
+                }
+            });
+        } else {
+            errors.push({ field: 'borders', message: 'Fronteras debe ser una lista de códigos (3 letras) o una cadena separada por comas.' });
         }
     }
 
@@ -119,13 +126,28 @@ export const createRules = [
         throw new Error('Capital debe ser una lista o una cadena separada por comas.');
     }),
     body('capital.*').optional().isString().trim().isLength({ min: 3, max: 90 }).withMessage('Cada capital debe tener entre 3 y 90 caracteres.'),
-    // borders puede ser array o string; validar códigos
+    // borders: aceptar array o string (coma separada). Validar que CADA código sea 3 letras mayúsculas (ej: ARG)
     body('borders').optional().custom(value => {
-        if (Array.isArray(value)) return true;
-        if (typeof value === 'string') return true;
+        const re = /^[A-Z]{3}$/;
+        if (Array.isArray(value)) {
+            for (const v of value) {
+                if (typeof v !== 'string' || !re.test(v.trim())) {
+                    throw new Error('Cada código de frontera debe ser 3 letras mayúsculas (ej: ARG).');
+                }
+            }
+            return true;
+        }
+        if (typeof value === 'string') {
+            const parts = value.split(',').map(s => s.trim()).filter(Boolean);
+            for (const p of parts) {
+                if (!re.test(p)) {
+                    throw new Error('Cada código de frontera debe ser 3 letras mayúsculas (ej: ARG).');
+                }
+            }
+            return true;
+        }
         throw new Error('Fronteras debe ser una lista o una cadena separada por comas.');
     }),
-    body('borders.*').optional().isString().matches(/^[A-Z]{3}$/).withMessage('Cada código de frontera debe ser 3 letras mayúsculas.'),
     body('area').optional().isFloat({ gt: 0 }).withMessage('Área debe ser un número positivo.'),
     body('population').optional().isInt({ gt: 0 }).withMessage('Población debe ser un entero positivo.'),
     // timezones puede ser array o string
